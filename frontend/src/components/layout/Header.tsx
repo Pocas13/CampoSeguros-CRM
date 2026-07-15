@@ -1,6 +1,6 @@
 import { Bell } from "lucide-react";
-import { Avatar } from "@/components/common/Avatar";
 import { SearchBar } from "@/components/common/SearchBar";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 export function Header() {
   return (
@@ -17,7 +17,7 @@ export function Header() {
           <Bell className="h-4 w-4" />
         </button>
 
-        <Avatar name="Daniel Campos" initials="DC" />
+        <UserMenu name="Daniel Campos" initials="DC" />
       </div>
     </header>
   );

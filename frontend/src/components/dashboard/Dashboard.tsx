@@ -8,12 +8,17 @@ const kpis = [
   { title: "Sinistros", value: "3", description: "1 em análise" },
 ];
 
-export function Dashboard() {
+export default function Dashboard() {
   return (
     <div className="p-10">
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {kpis.map((item) => (
-          <KPICard key={item.title} title={item.title} value={item.value} description={item.description} />
+          <KPICard
+            key={item.title}
+            title={item.title}
+            value={item.value}
+            description={item.description}
+          />
         ))}
       </div>
 
