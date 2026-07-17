@@ -1,24 +1,38 @@
-import { Bell } from "lucide-react";
-import { SearchBar } from "@/components/common/SearchBar";
-import { UserMenu } from "@/components/layout/UserMenu";
-
-export function Header() {
+export default function Header() {
   return (
-    <header className="flex h-20 items-center justify-between border-b border-slate-200 bg-white px-10">
-      <div>
-        <h2 className="text-3xl font-bold text-slate-800">Dashboard</h2>
-        <p className="text-slate-500">Bem-vindo ao InsureFlow</p>
+    <header className="flex h-16 items-center justify-between border-b bg-white px-8">
+
+      <input
+        placeholder="Pesquisar cliente, apólice, matrícula..."
+        className="w-[500px] rounded-lg border px-4 py-2"
+      />
+
+      <div className="flex items-center gap-3">
+
+        <div className="text-right">
+
+          <div className="font-semibold">
+
+            Daniel Campos
+
+          </div>
+
+          <div className="text-sm text-slate-500">
+
+            Mediador
+
+          </div>
+
+        </div>
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white">
+
+          D
+
+        </div>
+
       </div>
 
-      <div className="flex items-center gap-4">
-        <SearchBar />
-
-        <button className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200">
-          <Bell className="h-4 w-4" />
-        </button>
-
-        <UserMenu name="Daniel Campos" initials="DC" />
-      </div>
     </header>
   );
 }

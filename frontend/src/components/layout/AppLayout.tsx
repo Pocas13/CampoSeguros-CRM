@@ -1,22 +1,27 @@
-import type { ReactNode } from "react";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
+import Sidebar from "./Sidebar";
+import Header from "./Header";
 
-type AppLayoutProps = {
-  children: ReactNode;
-};
-
-export function AppLayout({ children }: AppLayoutProps) {
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <main className="min-h-screen bg-slate-100">
-      <div className="flex min-h-screen">
-        <Sidebar />
+    <div className="flex h-screen bg-slate-100">
+      <Sidebar />
 
-        <section className="flex-1">
-          <Header />
+      <div className="flex flex-1 flex-col">
+
+        <Header />
+
+        <main className="flex-1 overflow-auto p-6">
+
           {children}
-        </section>
+
+        </main>
+
       </div>
-    </main>
+
+    </div>
   );
 }

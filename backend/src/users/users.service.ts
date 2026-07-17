@@ -22,11 +22,11 @@ export class UsersService {
     });
   }
 
-  create(data: { email: string; name?: string; password: string }): Promise<User> {
-    return this.prisma.user.create({
-      data,
-    });
-  }
+ create(data: { email: string; name: string; password: string }): Promise<User> {
+  return this.prisma.user.create({
+    data,
+  });
+}
 
   setRefreshToken(userId: number, refreshToken: string, expiresAt: Date): Promise<RefreshToken> {
     return this.prisma.refreshToken.create({

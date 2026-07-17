@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { CompaniesModule } from './companies/companies.module';
 import { RolesModule } from './roles/roles.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { SimulationsModule } from './simulations/simulations.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PrismaModule } from './prisma/prisma.module';
     CompaniesModule,
     RolesModule,
     PrismaModule,
+    SimulationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
