@@ -1,21 +1,73 @@
+import {
+  IsDateString,
+  IsEmail,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  Min,
+  MinLength,
+} from "class-validator";
+
 export class CreateClientDto {
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(2)
+  @MaxLength(150)
   name: string;
 
-  nif?: string;
+  @IsOptional()
+  @Matches(/^\d{9}$/, {
+    message: "O NIF deve conter exatamente 9 números.",
+  })
+  nif?: string | null;
 
-  birthDate?: Date;
+  @IsOptional()
+  @IsDateString(
+    {},
+    {
+      message: "A data de nascimento não é válida.",
+    },
+  )
+  birthDate?: string | null;
 
-  email?: string;
+  @IsOptional()
+  @IsEmail(
+    {},
+    {
+      message: "O email não é válido.",
+    },
+  )
+  email?: string | null;
 
-  phone?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string | null;
 
-  address?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(250)
+  address?: string | null;
 
-  postalCode?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  postalCode?: string | null;
 
-  city?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  city?: string | null;
 
-  notes?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000)
+  notes?: string | null;
 
+  @IsInt()
+  @Min(1)
   companyId: number;
 }

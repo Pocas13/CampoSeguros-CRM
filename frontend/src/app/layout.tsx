@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 import AppLayout from "@/components/layout/AppLayout";
+import QueryProvider from "@/providers/QueryProvider";
 
 export const metadata: Metadata = {
   title: "InsureFlow",
@@ -16,17 +17,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt">
-
       <body>
-
-        <AppLayout>
-
-          {children}
-
-        </AppLayout>
-
+        <QueryProvider>
+          <AppLayout>{children}</AppLayout>
+        </QueryProvider>
       </body>
-
     </html>
   );
 }

@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
 } from "@nestjs/common";
@@ -14,7 +15,9 @@ import { UpdateClientDto } from "./dto/update-client.dto";
 
 @Controller("clients")
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsService) {}
+  constructor(
+    private readonly clientsService: ClientsService,
+  ) {}
 
   @Post()
   create(@Body() dto: CreateClientDto) {
@@ -27,20 +30,24 @@ export class ClientsController {
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.clientsService.findOne(Number(id));
+  findOne(
+    @Param("id", ParseIntPipe) id: number,
+  ) {
+    return this.clientsService.findOne(id);
   }
 
   @Patch(":id")
   update(
-    @Param("id") id: string,
+    @Param("id", ParseIntPipe) id: number,
     @Body() dto: UpdateClientDto,
   ) {
-    return this.clientsService.update(Number(id), dto);
+    return this.clientsService.update(id, dto);
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.clientsService.remove(Number(id));
+  remove(
+    @Param("id", ParseIntPipe) id: number,
+  ) {
+    return this.clientsService.remove(id);
   }
 }

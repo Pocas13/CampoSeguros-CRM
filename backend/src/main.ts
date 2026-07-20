@@ -5,10 +5,15 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  });
+app.enableCors({
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3002",
+    "http://192.168.1.179:3000",
+    "http://192.168.1.179:3002",
+  ],
+  credentials: true,
+});
 
   const config = new DocumentBuilder()
     .setTitle("InsureFlow API")
@@ -19,7 +24,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, document);
 
-  await app.listen(3001);
+ await app.listen(3001, "0.0.0.0");
 }
 
 bootstrap();
