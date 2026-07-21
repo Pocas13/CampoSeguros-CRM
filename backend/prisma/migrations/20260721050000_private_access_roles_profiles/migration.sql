@@ -1,0 +1,32 @@
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "avatarUrl" TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "jobTitle" TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastLoginAt" TIMESTAMP(3);
+
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "postalCode" TEXT;
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "website" TEXT;
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "logoUrl" TEXT;
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "asfRegistration" TEXT;
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "agentPageUrl" TEXT;
+
+ALTER TABLE "Insurer" ADD COLUMN IF NOT EXISTS "agentPortalUrl" TEXT;
+ALTER TABLE "Insurer" ADD COLUMN IF NOT EXISTS "claimsPortalUrl" TEXT;
+ALTER TABLE "Insurer" ADD COLUMN IF NOT EXISTS "quoteLinks" JSONB;
+
+ALTER TABLE "Quote" ADD COLUMN IF NOT EXISTS "createdById" INTEGER;
+ALTER TABLE "CalendarEvent" ADD COLUMN IF NOT EXISTS "assignedToId" INTEGER;
+ALTER TABLE "CalendarEvent" ADD COLUMN IF NOT EXISTS "createdById" INTEGER;
+
+DO $$ BEGIN
+  ALTER TABLE "Quote" ADD CONSTRAINT "Quote_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE "CalendarEvent" ADD CONSTRAINT "CalendarEvent_assignedToId_fkey" FOREIGN KEY ("assignedToId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE "CalendarEvent" ADD CONSTRAINT "CalendarEvent_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE INDEX IF NOT EXISTS "Quote_createdById_idx" ON "Quote"("createdById");
+CREATE INDEX IF NOT EXISTS "CalendarEvent_assignedToId_idx" ON "CalendarEvent"("assignedToId");
+CREATE INDEX IF NOT EXISTS "CalendarEvent_createdById_idx" ON "CalendarEvent"("createdById");

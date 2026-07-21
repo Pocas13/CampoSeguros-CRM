@@ -1,0 +1,20 @@
+export type CalendarEvent = {
+  id: number | string;
+  title: string;
+  description: string | null;
+  type: string;
+  status: string;
+  priority: string;
+  startAt: string;
+  endAt: string | null;
+  allDay: boolean;
+  color: string | null;
+  clientId: number | null;
+  policyId: number | null;
+  quoteId: number | null;
+  computed?: boolean;
+  client?: { id: number; name: string } | null;
+  policy?: { id: number; policyNumber: string; product?: string } | null;
+  quote?: { id: number; reference: string; title?: string } | null;
+  assignedTo?: { id: number; name: string } | null;
+};

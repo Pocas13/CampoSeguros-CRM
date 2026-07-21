@@ -66,17 +66,22 @@ export default function EditClientPage() {
     }
 
     setForm({
+      type: client.type ?? "INDIVIDUAL",
       name: client.name,
       nif: client.nif ?? "",
       birthDate: client.birthDate
         ? client.birthDate.slice(0, 10)
         : "",
+      incorporationDate: client.incorporationDate ? client.incorporationDate.slice(0,10) : "",
+      cae: client.cae ?? "",
+      representativeName: client.representativeName ?? "",
       email: client.email ?? "",
       phone: client.phone ?? "",
       address: client.address ?? "",
       postalCode:
         client.postalCode ?? "",
       city: client.city ?? "",
+      country: client.country ?? "Portugal",
       notes: client.notes ?? "",
       active: client.active,
     });
@@ -85,10 +90,13 @@ export default function EditClientPage() {
   const mutation = useMutation({
     mutationFn: () =>
       updateClient(clientId, {
+        type: form.type,
         name: form.name.trim(),
         nif: form.nif.trim() || null,
-        birthDate:
-          form.birthDate || null,
+        birthDate: form.type === "INDIVIDUAL" ? form.birthDate || null : null,
+        incorporationDate: form.type === "BUSINESS" ? form.incorporationDate || null : null,
+        cae: form.type === "BUSINESS" ? form.cae.trim() || null : null,
+        representativeName: form.type === "BUSINESS" ? form.representativeName.trim() || null : null,
         email:
           form.email.trim() || null,
         phone:
@@ -98,6 +106,7 @@ export default function EditClientPage() {
         postalCode:
           form.postalCode.trim() || null,
         city: form.city.trim() || null,
+        country: form.country.trim() || null,
         notes:
           form.notes.trim() || null,
         active: form.active,

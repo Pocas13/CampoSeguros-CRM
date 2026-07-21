@@ -47,17 +47,21 @@ export default function NewClientPage() {
     event.preventDefault();
 
     mutation.mutate({
+      type: form.type,
       name: form.name.trim(),
       nif: form.nif.trim() || null,
-      birthDate: form.birthDate || null,
+      birthDate: form.type === "INDIVIDUAL" ? form.birthDate || null : null,
+      incorporationDate: form.type === "BUSINESS" ? form.incorporationDate || null : null,
+      cae: form.type === "BUSINESS" ? form.cae.trim() || null : null,
+      representativeName: form.type === "BUSINESS" ? form.representativeName.trim() || null : null,
       email: form.email.trim() || null,
       phone: form.phone.trim() || null,
       address: form.address.trim() || null,
       postalCode:
         form.postalCode.trim() || null,
       city: form.city.trim() || null,
+      country: form.country.trim() || null,
       notes: form.notes.trim() || null,
-      companyId: 1,
     });
   }
 

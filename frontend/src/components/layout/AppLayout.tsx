@@ -1,5 +1,6 @@
-import Sidebar from "./Sidebar";
 import Header from "./Header";
+import MobileNavigation from "./MobileNavigation";
+import Sidebar from "./Sidebar";
 
 export default function AppLayout({
   children,
@@ -7,21 +8,17 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-[#f3f6fb]">
       <Sidebar />
 
-      <div className="flex flex-1 flex-col">
-
+      <div className="min-w-0 flex-1">
         <Header />
-
-        <main className="flex-1 overflow-auto p-6">
-
+        <main className="mx-auto w-full max-w-[1680px] p-4 pb-28 md:p-7 md:pb-28 lg:pb-7">
           {children}
-
         </main>
-
       </div>
 
+      <MobileNavigation />
     </div>
   );
 }

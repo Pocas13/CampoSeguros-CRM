@@ -1,27 +1,14 @@
 import "./globals.css";
-
 import type { Metadata } from "next";
-
-import AppLayout from "@/components/layout/AppLayout";
 import QueryProvider from "@/providers/QueryProvider";
+import { AuthProvider } from "@/providers/AuthProvider";
+import AppShell from "@/components/layout/AppShell";
 
 export const metadata: Metadata = {
   title: "InsureFlow",
-  description: "Software de Gestão de Seguros",
+  description: "Plataforma privada de gestão e comparação para mediação de seguros",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="pt">
-      <body>
-        <QueryProvider>
-          <AppLayout>{children}</AppLayout>
-        </QueryProvider>
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return <html lang="pt"><body><QueryProvider><AuthProvider><AppShell>{children}</AppShell></AuthProvider></QueryProvider></body></html>;
 }

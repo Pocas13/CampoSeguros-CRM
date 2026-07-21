@@ -17,7 +17,7 @@ export class ClientsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async create(data: CreateClientDto) {
+  async create(data: CreateClientDto, companyId: number) {
     const name = data.name.trim();
 
     if (!name) {
@@ -26,14 +26,23 @@ export class ClientsService {
       );
     }
 
+    const [organization, clientCount] = await Promise.all([
+      this.prisma.company.findUnique({ where: { id: companyId }, select: { maxClients: true } }),
+      this.prisma.client.count({ where: { companyId } }),
+    ]);
+    if (!organization) throw new NotFoundException("Organização não encontrada.");
+    if (clientCount >= organization.maxClients) throw new ConflictException("Foi atingido o limite de clientes do plano.");
+
     try {
       return await this.prisma.client.create({
         data: {
           name,
+          type: data.type,
           nif: this.cleanNullable(data.nif),
-          birthDate: data.birthDate
-            ? new Date(data.birthDate)
-            : null,
+          birthDate: data.birthDate ? new Date(data.birthDate) : null,
+          incorporationDate: data.incorporationDate ? new Date(data.incorporationDate) : null,
+          cae: this.cleanNullable(data.cae),
+          representativeName: this.cleanNullable(data.representativeName),
           email: this.cleanNullable(data.email),
           phone: this.cleanNullable(data.phone),
           address: this.cleanNullable(data.address),
@@ -41,8 +50,9 @@ export class ClientsService {
             data.postalCode,
           ),
           city: this.cleanNullable(data.city),
+          country: this.cleanNullable(data.country) ?? "Portugal",
           notes: this.cleanNullable(data.notes),
-          companyId: data.companyId,
+          companyId,
         },
       });
     } catch (error) {
@@ -50,8 +60,9 @@ export class ClientsService {
     }
   }
 
-  findAll() {
+  findAll(companyId: number) {
     return this.prisma.client.findMany({
+      where: { companyId },
       orderBy: [
         {
           active: "desc",
@@ -63,14 +74,13 @@ export class ClientsService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, companyId: number) {
     const client =
-      await this.prisma.client.findUnique({
-        where: {
-          id,
-        },
+      await this.prisma.client.findFirst({
+        where: { id, companyId },
         include: {
           policies: {
+            include: { insurer: true },
             orderBy: {
               createdAt: "desc",
             },
@@ -84,6 +94,10 @@ export class ClientsService {
             orderBy: {
               createdAt: "desc",
             },
+          },
+          quotes: {
+            include: { offers: { include: { insurer: true } }, policy: true },
+            orderBy: { updatedAt: "desc" },
           },
         },
       });
@@ -100,8 +114,9 @@ export class ClientsService {
   async update(
     id: number,
     data: UpdateClientDto,
+    companyId: number,
   ) {
-    await this.findOne(id);
+    await this.findOne(id, companyId);
 
     const updateData: Prisma.ClientUpdateInput =
       {};
@@ -117,6 +132,12 @@ export class ClientsService {
 
       updateData.name = name;
     }
+
+    if (data.type !== undefined) updateData.type = data.type;
+    if (data.incorporationDate !== undefined) updateData.incorporationDate = data.incorporationDate ? new Date(data.incorporationDate) : null;
+    if (data.cae !== undefined) updateData.cae = this.cleanNullable(data.cae);
+    if (data.representativeName !== undefined) updateData.representativeName = this.cleanNullable(data.representativeName);
+    if (data.country !== undefined) updateData.country = this.cleanNullable(data.country);
 
     if (data.nif !== undefined) {
       updateData.nif = this.cleanNullable(data.nif);
@@ -179,8 +200,8 @@ export class ClientsService {
     }
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(id: number, companyId: number) {
+    await this.findOne(id, companyId);
 
     try {
       return await this.prisma.client.delete({

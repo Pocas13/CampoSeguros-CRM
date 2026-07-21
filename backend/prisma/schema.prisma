@@ -15,6 +15,11 @@ enum UserRole {
   EMPLOYEE
 }
 
+enum ClientType {
+  INDIVIDUAL
+  BUSINESS
+}
+
 enum PolicyStatus {
   ACTIVE
   PENDING
@@ -28,166 +33,609 @@ enum ClaimStatus {
   CLOSED
 }
 
+enum ContactType {
+  ACCOUNT_MANAGER
+  COMMERCIAL
+  SUPPORT
+  CLAIMS
+  ASSISTANCE
+  OTHER
+}
+
+enum PaymentFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMIANNUAL
+  ANNUAL
+  SINGLE
+}
+
+enum OrganizationStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum IntegrationMode {
+  MANUAL
+  API
+  WEBSERVICE
+  FILE_IMPORT
+}
+
+enum IntegrationEnvironment {
+  SANDBOX
+  PRODUCTION
+}
+
+enum IntegrationStatus {
+  NOT_CONFIGURED
+  CONFIGURED
+  TESTING
+  ACTIVE
+  ERROR
+  DISABLED
+}
+
+enum ImportSource {
+  API
+  WEBSERVICE
+  CSV
+  XLSX
+  XML
+  JSON
+  MANUAL
+  DEMO
+}
+
+enum ImportStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  PARTIAL
+  FAILED
+  CANCELLED
+}
+
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
-  password String
-  name     String
-  role     UserRole @default(EMPLOYEE)
-  active   Boolean  @default(true)
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  password       String
+  name           String
+  role           UserRole        @default(EMPLOYEE)
+  permissions    String[]        @default([])
+  active         Boolean         @default(true)
+  avatarUrl      String?
+  phone          String?
+  jobTitle       String?
+  lastLoginAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  companyId      Int?
+  company        Company?        @relation(fields: [companyId], references: [id])
+  refreshTokens  RefreshToken[]
+  createdQuotes  Quote[]         @relation("QuoteCreatedBy")
+  assignedEvents CalendarEvent[] @relation("EventAssignee")
+  createdEvents  CalendarEvent[] @relation("EventCreator")
+  auditLogs      AuditLog[]
+  importJobs     PortfolioImportJob[] @relation("ImportStartedBy")
+  sentInvitations UserInvitation[] @relation("InvitationSender")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  companyId Int?
-  company   Company? @relation(fields: [companyId], references: [id])
-
-  refreshTokens RefreshToken[]
+  @@index([companyId])
 }
 
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique
   expiresAt DateTime
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
+/// Organização mediadora que utiliza o InsureFlow.
 model Company {
-  id Int @id @default(autoincrement())
+  id              Int                @id @default(autoincrement())
+  name            String
+  slug            String?            @unique
+  nif             String?            @unique
+  email           String?
+  phone           String?
+  address         String?
+  postalCode      String?
+  city            String?
+  website         String?
+  logoUrl         String?
+  asfRegistration String?
+  status          OrganizationStatus @default(TRIAL)
+  plan            String             @default("STARTER")
+  maxUsers        Int                @default(5)
+  maxClients      Int                @default(1000)
+  settings        Json?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  users           User[]
+  clients         Client[]
+  simulations     Simulation[]
+  quotes          Quote[]
+  calendarEvents  CalendarEvent[]
+  policies        Policy[]
+  claims          Claim[]
+  policyDocuments PolicyDocument[]
+  quoteOffers     QuoteOffer[]
+  quoteDocuments  QuoteDocument[]
+  quoteActivities QuoteActivity[]
+  insurerSettings OrganizationInsurer[]
+  integrations    InsurerIntegration[]
+  importJobs      PortfolioImportJob[]
+  importItems     PortfolioImportItem[]
+  auditLogs       AuditLog[]
+  invitations     UserInvitation[]
+}
 
-  name String
+/// Catálogo global de companhias. Os dados específicos de cada mediadora ficam em OrganizationInsurer.
+model Insurer {
+  id              Int                   @id @default(autoincrement())
+  name            String
+  commercialName  String?
+  nif             String?               @unique
+  asfCode         String?
+  website         String?
+  agentPortalUrl  String?
+  claimsPortalUrl String?
+  quoteLinks      Json?
+  email           String?
+  phone           String?
+  address         String?
+  postalCode      String?
+  city            String?
+  active          Boolean               @default(true)
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  contacts        InsurerContact[]
+  policies        Policy[]
+  quoteOffers     QuoteOffer[]
+  organizations   OrganizationInsurer[]
+  integrations    InsurerIntegration[]
+  importJobs      PortfolioImportJob[]
 
-  nif String? @unique
+  @@index([name])
+}
 
-  email String?
+model InsurerContact {
+  id         Int         @id @default(autoincrement())
+  insurerId  Int
+  insurer    Insurer     @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+  type       ContactType @default(OTHER)
+  name       String?
+  department String?
+  email      String?
+  phone      String?
+  mobile     String?
+  schedule   String?
+  notes      String?
+  active     Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
-  phone String?
+  @@index([insurerId])
+}
 
-  address String?
+/// Configuração e contactos específicos da companhia para uma mediadora.
+model OrganizationInsurer {
+  id                    Int      @id @default(autoincrement())
+  companyId             Int
+  company               Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  insurerId             Int
+  insurer               Insurer  @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+  enabled               Boolean  @default(true)
+  agencyCode            String?
+  accountManagerName    String?
+  accountManagerEmail   String?
+  accountManagerPhone   String?
+  agentSupportPhone     String?
+  agentSupportEmail     String?
+  claimsPhone           String?
+  claimsEmail           String?
+  assistancePhone       String?
+  customQuoteLinks      Json?
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  city String?
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  users User[]
-
-  clients Client[]
-
-  simulations Simulation[]
+  @@unique([companyId, insurerId])
+  @@index([companyId])
+  @@index([insurerId])
 }
 
 model Client {
-  id Int @id @default(autoincrement())
+  id                 Int        @id @default(autoincrement())
+  type               ClientType @default(INDIVIDUAL)
+  name               String
+  nif                String?
+  birthDate          DateTime?
+  incorporationDate  DateTime?
+  cae                String?
+  representativeName String?
+  email              String?
+  phone              String?
+  address            String?
+  postalCode         String?
+  city               String?
+  country            String?    @default("Portugal")
+  notes              String?
+  active             Boolean    @default(true)
+  companyId          Int
+  company            Company    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  policies           Policy[]
+  claims             Claim[]
+  simulations        Simulation[]
+  quotes             Quote[]
+  calendarEvents     CalendarEvent[]
+  importItems        PortfolioImportItem[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 
-  name String
-
-  nif String? @unique
-
-  birthDate DateTime?
-
-  email String?
-
-  phone String?
-
-  address String?
-
-  postalCode String?
-
-  city String?
-
-  notes String?
-
-  active Boolean @default(true)
-
-  companyId Int
-
-  company Company @relation(fields: [companyId], references: [id])
-
-  policies Policy[]
-
-  claims Claim[]
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  simulations Simulation[]
+  @@unique([companyId, nif])
+  @@index([name])
+  @@index([companyId])
 }
 
 model Policy {
-  id Int @id @default(autoincrement())
+  id                Int              @id @default(autoincrement())
+  policyNumber      String
+  proposalNumber    String?
+  product           String
+  branch            String?
+  insurerNameLegacy String?          @map("insurer")
+  premium           Float?
+  commission        Float?
+  startDate         DateTime?
+  renewalDate       DateTime?
+  paymentFrequency  PaymentFrequency @default(ANNUAL)
+  status            PolicyStatus     @default(ACTIVE)
+  notes             String?
+  companyId         Int
+  company           Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  clientId          Int
+  client            Client           @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  insurerId         Int?
+  insurer           Insurer?         @relation(fields: [insurerId], references: [id])
+  quoteId           Int?             @unique
+  quote             Quote?           @relation(fields: [quoteId], references: [id])
+  claims            Claim[]
+  documents         PolicyDocument[]
+  calendarEvents    CalendarEvent[]
+  importItems       PortfolioImportItem[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  policyNumber String @unique
+  @@unique([companyId, policyNumber])
+  @@index([companyId])
+  @@index([clientId])
+  @@index([insurerId])
+  @@index([renewalDate])
+}
 
-  product String
-
-  insurer String
-
-  premium Float?
-
-  renewalDate DateTime?
-
-  status PolicyStatus @default(ACTIVE)
-
-  clientId Int
-
-  client Client @relation(fields: [clientId], references: [id])
-
-  claims Claim[]
-
+model PolicyDocument {
+  id        Int      @id @default(autoincrement())
+  companyId Int
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  policyId  Int
+  policy    Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  name      String
+  type      String   @default("OTHER")
+  fileName  String?
+  url       String?
+  notes     String?
   createdAt DateTime @default(now())
-
   updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([policyId])
 }
 
 model Claim {
-  id Int @id @default(autoincrement())
-
-  claimNumber String @unique
-
+  id          Int         @id @default(autoincrement())
+  claimNumber String
   description String?
+  status      ClaimStatus @default(OPEN)
+  companyId   Int
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  clientId    Int
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  policyId    Int?
+  policy      Policy?     @relation(fields: [policyId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  status ClaimStatus @default(OPEN)
-
-  clientId Int
-
-  client Client @relation(fields: [clientId], references: [id])
-
-  policyId Int?
-
-  policy Policy? @relation(fields: [policyId], references: [id])
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
+  @@unique([companyId, claimNumber])
+  @@index([companyId])
+  @@index([clientId])
+  @@index([policyId])
 }
 
+/// Registo antigo mantido por compatibilidade. Novos processos usam Quote.
 model Simulation {
-  id Int @id @default(autoincrement())
-
-  clientId Int
-  client   Client @relation(fields: [clientId], references: [id])
-
-  companyId Int
-  company   Company @relation(fields: [companyId], references: [id])
-
+  id            Int      @id @default(autoincrement())
+  clientId      Int
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  companyId     Int
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
   insuranceType String
+  premium       Float?
+  commission    Float?
+  notes         String?
+  status        String   @default("DRAFT")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  premium Float?
+  @@index([companyId])
+}
 
-  commission Float?
+model Quote {
+  id             Int             @id @default(autoincrement())
+  reference      String
+  title          String
+  productType    String
+  status         String          @default("DRAFT")
+  origin         String          @default("MANUAL")
+  clientId       Int?
+  client         Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  companyId      Int
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  createdById    Int?
+  createdBy      User?           @relation("QuoteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  effectiveDate  DateTime?
+  expiresAt      DateTime?
+  riskData       Json?
+  preferences    Json?
+  notes          String?
+  offers         QuoteOffer[]
+  documents      QuoteDocument[]
+  activities     QuoteActivity[]
+  calendarEvents CalendarEvent[]
+  policy         Policy?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
-  notes String?
+  @@unique([companyId, reference])
+  @@index([clientId])
+  @@index([companyId])
+  @@index([createdById])
+  @@index([productType])
+  @@index([status])
+  @@index([createdAt])
+}
 
-  status String @default("DRAFT")
+model QuoteOffer {
+  id                 Int       @id @default(autoincrement())
+  companyId          Int
+  company            Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  quoteId            Int
+  quote              Quote     @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  insurerId          Int
+  insurer            Insurer   @relation(fields: [insurerId], references: [id])
+  quoteNumber        String?
+  annualPremium      Float?
+  installmentPremium Float?
+  commission         Float?
+  deductible         Float?
+  status             String    @default("REQUESTED")
+  validUntil         DateTime?
+  coverages          Json?
+  exclusions         Json?
+  notes              String?
+  recommended        Boolean   @default(false)
+  selected           Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
+  @@unique([quoteId, insurerId])
+  @@index([companyId])
+  @@index([quoteId])
+  @@index([insurerId])
+  @@index([status])
+}
+
+model QuoteDocument {
+  id        Int      @id @default(autoincrement())
+  companyId Int
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  quoteId   Int
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  name      String
+  type      String   @default("OTHER")
+  fileName  String?
+  url       String?
+  notes     String?
   createdAt DateTime @default(now())
-
   updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([quoteId])
+}
+
+model QuoteActivity {
+  id          Int      @id @default(autoincrement())
+  companyId   Int
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  quoteId     Int
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  action      String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([companyId])
+  @@index([quoteId])
+  @@index([createdAt])
+}
+
+model CalendarEvent {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  type         String    @default("TASK")
+  status       String    @default("PENDING")
+  priority     String    @default("NORMAL")
+  startAt      DateTime
+  endAt        DateTime?
+  allDay       Boolean   @default(false)
+  color        String?
+  reminders    Json?
+  companyId    Int
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  clientId     Int?
+  client       Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  policyId     Int?
+  policy       Policy?   @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  quoteId      Int?
+  quote        Quote?    @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  assignedToId Int?
+  assignedTo   User?     @relation("EventAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdById  Int?
+  createdBy    User?     @relation("EventCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([companyId])
+  @@index([startAt])
+  @@index([clientId])
+  @@index([policyId])
+  @@index([quoteId])
+  @@index([assignedToId])
+  @@index([createdById])
+}
+
+/// Credenciais e capacidade de integração por mediadora e companhia.
+model InsurerIntegration {
+  id                Int                    @id @default(autoincrement())
+  companyId         Int
+  company           Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  insurerId         Int
+  insurer           Insurer                @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+  mode              IntegrationMode        @default(MANUAL)
+  environment       IntegrationEnvironment @default(SANDBOX)
+  status            IntegrationStatus      @default(NOT_CONFIGURED)
+  agencyCode        String?
+  username          String?
+  encryptedConfig   String?
+  encryptedSecret   String?
+  capabilities      Json?
+  lastTestedAt      DateTime?
+  lastSyncAt        DateTime?
+  lastError         String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  importJobs        PortfolioImportJob[]
+
+  @@unique([companyId, insurerId, environment])
+  @@index([companyId])
+  @@index([insurerId])
+}
+
+model PortfolioImportJob {
+  id           Int             @id @default(autoincrement())
+  companyId    Int
+  company      Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  insurerId    Int?
+  insurer      Insurer?        @relation(fields: [insurerId], references: [id], onDelete: SetNull)
+  integrationId Int?
+  integration  InsurerIntegration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+  source       ImportSource
+  status       ImportStatus    @default(QUEUED)
+  startedById  Int?
+  startedBy    User?           @relation("ImportStartedBy", fields: [startedById], references: [id], onDelete: SetNull)
+  fileName     String?
+  externalReference String?
+  totalRecords Int             @default(0)
+  importedRecords Int          @default(0)
+  updatedRecords Int           @default(0)
+  skippedRecords Int           @default(0)
+  failedRecords Int            @default(0)
+  summary      Json?
+  errorMessage String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  items        PortfolioImportItem[]
+
+  @@index([companyId])
+  @@index([insurerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PortfolioImportItem {
+  id          Int                @id @default(autoincrement())
+  companyId   Int
+  company     Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  jobId       Int
+  job         PortfolioImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  entityType  String
+  externalId  String?
+  status      ImportStatus       @default(QUEUED)
+  clientId    Int?
+  client      Client?             @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  policyId    Int?
+  policy      Policy?             @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  rawData     Json?
+  normalizedData Json?
+  errorMessage String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([entityType])
+  @@index([externalId])
+  @@index([clientId])
+  @@index([policyId])
+}
+
+model UserInvitation {
+  id          Int      @id @default(autoincrement())
+  token       String   @unique
+  companyId   Int
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  email       String
+  role        UserRole @default(EMPLOYEE)
+  permissions String[] @default([])
+  invitedById Int?
+  invitedBy   User?    @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: SetNull)
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([companyId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id          BigInt    @id @default(autoincrement())
+  companyId   Int?
+  company     Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  userId      Int?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      String
+  method      String
+  path        String
+  entity      String?
+  entityId    String?
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([entity])
 }

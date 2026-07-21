@@ -4,27 +4,36 @@ import { api } from "./api";
 import type { Client } from "@/types/client";
 
 export type CreateClientData = {
+  type?: "INDIVIDUAL" | "BUSINESS";
   name: string;
   nif?: string | null;
   birthDate?: string | null;
+  incorporationDate?: string | null;
+  cae?: string | null;
+  representativeName?: string | null;
   email?: string | null;
   phone?: string | null;
   address?: string | null;
   postalCode?: string | null;
   city?: string | null;
+  country?: string | null;
   notes?: string | null;
-  companyId: number;
 };
 
 export type UpdateClientData = {
+  type?: "INDIVIDUAL" | "BUSINESS";
   name?: string;
   nif?: string | null;
   birthDate?: string | null;
+  incorporationDate?: string | null;
+  cae?: string | null;
+  representativeName?: string | null;
   email?: string | null;
   phone?: string | null;
   address?: string | null;
   postalCode?: string | null;
   city?: string | null;
+  country?: string | null;
   notes?: string | null;
   active?: boolean;
 };

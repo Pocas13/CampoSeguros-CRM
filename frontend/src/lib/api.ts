@@ -1,4 +1,4 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+export const API_BASE_URL = "/api";
 
 export type LoginPayload = {
   email: string;
@@ -12,24 +12,31 @@ export type RegisterPayload = {
 };
 
 export type LoginResponse = {
-  accessToken: string;
-  refreshToken: string;
+  user: {
+    id: number;
+    email: string;
+    name: string;
+    role: string;
+  };
   expiresIn: string;
 };
 
 async function handleResponse(response: Response) {
   const data = await response.json();
+
   if (!response.ok) {
-    throw new Error(data?.message || 'Erro na requisição');
+    throw new Error(data?.message || "Erro no pedido.");
   }
+
   return data;
 }
 
 export async function loginUser(payload: LoginPayload) {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
+    method: "POST",
+    credentials: "include",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
@@ -39,9 +46,10 @@ export async function loginUser(payload: LoginPayload) {
 
 export async function registerUser(payload: RegisterPayload) {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
-    method: 'POST',
+    method: "POST",
+    credentials: "include",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });

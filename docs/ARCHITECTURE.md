@@ -1,69 +1,26 @@
-# InsureFlow
-## Software Architecture
+# Arquitetura multiempresa
 
-**Versão:** 0.1.0  
-**Última atualização:** Julho 2026
+## Separação
 
----
+A tabela `Company` é a organização mediadora. As seguradoras vivem no catálogo `Insurer`. Cada pedido autenticado recebe `userId`, `companyId`, função e permissões do token, confirmado novamente na base de dados pelo guard de autenticação.
 
-# Objetivo
+Todos os serviços privados filtram por `companyId`. Números comerciais como NIF do cliente, número de apólice, número de sinistro e referência de cotação são únicos dentro de cada mediadora.
 
-O InsureFlow é uma plataforma profissional para mediação de seguros, concebida para centralizar a gestão de clientes, apólices, sinistros, propostas, documentos e comunicação com seguradoras.
+## Níveis
 
-A arquitetura foi desenhada para ser escalável, modular e preparada para futuras integrações com APIs, Inteligência Artificial e um Comparador Universal de Seguros.
+1. Plataforma InsureFlow: super administrador e gestão das mediadoras.
+2. Mediadora: administrador, gestores e colaboradores.
+3. Companhia: catálogo global mais configuração comercial e técnica por mediadora.
 
----
+## Integrações
 
-# Tecnologias
+`InsurerIntegration` guarda o modo, ambiente, capacidades e credenciais cifradas por organização e companhia. Um conector implementa teste, cotação e/ou leitura de carteira. O código do conector é comum; credenciais e código de agente são separados por mediadora.
 
-## Frontend
+## Segurança
 
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-
-## Backend
-
-- NestJS
-
-## Base de Dados
-
-- PostgreSQL
-- Prisma ORM
-
----
-
-# Estrutura
-
-frontend/
-- Interface da aplicação
-
-backend/
-- API
-
-database/
-- Scripts SQL
-- Prisma
-
-docs/
-- Documentação
-
----
-
-# Princípios
-
-- Código limpo
-- Componentes reutilizáveis
-- Design consistente
-- Performance
-- Segurança
-- Escalabilidade
-- Documentação contínua
-
----
-
-# Estado do Projeto
-
-Versão atual: 0.1.0
+- Sessões em cookies HttpOnly.
+- Segredos cifrados com AES-256-GCM.
+- Permissões verificadas no backend.
+- Auditoria das alterações.
+- Organizações suspensas deixam de aceder.
+- Nenhum `companyId` enviado pelo frontend é usado para decidir a organização ativa.

@@ -128,3 +128,31 @@
     @apply font-sans;
   }
 }
+@layer base {
+  body {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.08), transparent 28rem),
+      #f3f6fb;
+  }
+  ::selection {
+    background: rgba(14, 165, 233, 0.25);
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.05)];
+  }
+  .field {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/15 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50;
+  }
+  .eyebrow {
+    @apply text-[11px] font-black uppercase tracking-[0.18em] text-cyan-600;
+  }
+}
